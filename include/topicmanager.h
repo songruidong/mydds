@@ -2,7 +2,7 @@
 #define __TOPICMANAGER_H__
 
 #include <memory>
-#include "topic.h"
+#include "topic.hpp"
 #include "trie.h"
 
 class TopicManager

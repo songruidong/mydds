@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "topic.h"
+#include "topic.hpp"
 #include "TemperatureData.pb.h"
 
 TEST(TopicTest, SetAndGetData) {
