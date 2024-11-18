@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message TemperatureData {
+    float temperature = 1;
+    string location = 2;
+}
