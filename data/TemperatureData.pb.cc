@@ -14,46 +14,43 @@
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
+class TemperatureDataDefaultTypeInternal {
+ public:
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<TemperatureData> _instance;
+} _TemperatureData_default_instance_;
+static void InitDefaultsscc_info_TemperatureData_TemperatureData_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-PROTOBUF_PRAGMA_INIT_SEG
+  {
+    void* ptr = &::_TemperatureData_default_instance_;
+    new (ptr) ::TemperatureData();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::TemperatureData::InitAsDefaultInstance();
+}
 
-namespace _pb = ::PROTOBUF_NAMESPACE_ID;
-namespace _pbi = _pb::internal;
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_TemperatureData_TemperatureData_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_TemperatureData_TemperatureData_2eproto}, {}};
 
-PROTOBUF_CONSTEXPR TemperatureData::TemperatureData(
-    ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.location_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
-  , /*decltype(_impl_.temperature_)*/0
-  , /*decltype(_impl_._cached_size_)*/{}} {}
-struct TemperatureDataDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR TemperatureDataDefaultTypeInternal()
-      : _instance(::_pbi::ConstantInitialized{}) {}
-  ~TemperatureDataDefaultTypeInternal() {}
-  union {
-    TemperatureData _instance;
-  };
-};
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 TemperatureDataDefaultTypeInternal _TemperatureData_default_instance_;
-static ::_pb::Metadata file_level_metadata_TemperatureData_2eproto[1];
-static constexpr ::_pb::EnumDescriptor const** file_level_enum_descriptors_TemperatureData_2eproto = nullptr;
-static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_TemperatureData_2eproto = nullptr;
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_TemperatureData_2eproto[1];
+static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_TemperatureData_2eproto = nullptr;
+static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_TemperatureData_2eproto = nullptr;
 
-const uint32_t TableStruct_TemperatureData_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_TemperatureData_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::TemperatureData, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::TemperatureData, _impl_.temperature_),
-  PROTOBUF_FIELD_OFFSET(::TemperatureData, _impl_.location_),
+  PROTOBUF_FIELD_OFFSET(::TemperatureData, temperature_),
+  PROTOBUF_FIELD_OFFSET(::TemperatureData, location_),
 };
-static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, -1, -1, sizeof(::TemperatureData)},
+static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+  { 0, -1, sizeof(::TemperatureData)},
 };
 
-static const ::_pb::Message* const file_default_instances[] = {
-  &::_TemperatureData_default_instance_._instance,
+static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_TemperatureData_default_instance_),
 };
 
 const char descriptor_table_protodef_TemperatureData_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
@@ -61,164 +58,151 @@ const char descriptor_table_protodef_TemperatureData_2eproto[] PROTOBUF_SECTION_
   "ta\022\023\n\013temperature\030\001 \001(\002\022\020\n\010location\030\002 \001("
   "\tb\006proto3"
   ;
-static ::_pbi::once_flag descriptor_table_TemperatureData_2eproto_once;
-const ::_pbi::DescriptorTable descriptor_table_TemperatureData_2eproto = {
-    false, false, 89, descriptor_table_protodef_TemperatureData_2eproto,
-    "TemperatureData.proto",
-    &descriptor_table_TemperatureData_2eproto_once, nullptr, 0, 1,
-    schemas, file_default_instances, TableStruct_TemperatureData_2eproto::offsets,
-    file_level_metadata_TemperatureData_2eproto, file_level_enum_descriptors_TemperatureData_2eproto,
-    file_level_service_descriptors_TemperatureData_2eproto,
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_TemperatureData_2eproto_deps[1] = {
 };
-PROTOBUF_ATTRIBUTE_WEAK const ::_pbi::DescriptorTable* descriptor_table_TemperatureData_2eproto_getter() {
-  return &descriptor_table_TemperatureData_2eproto;
-}
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_TemperatureData_2eproto_sccs[1] = {
+  &scc_info_TemperatureData_TemperatureData_2eproto.base,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_TemperatureData_2eproto_once;
+const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_TemperatureData_2eproto = {
+  false, false, descriptor_table_protodef_TemperatureData_2eproto, "TemperatureData.proto", 89,
+  &descriptor_table_TemperatureData_2eproto_once, descriptor_table_TemperatureData_2eproto_sccs, descriptor_table_TemperatureData_2eproto_deps, 1, 0,
+  schemas, file_default_instances, TableStruct_TemperatureData_2eproto::offsets,
+  file_level_metadata_TemperatureData_2eproto, 1, file_level_enum_descriptors_TemperatureData_2eproto, file_level_service_descriptors_TemperatureData_2eproto,
+};
 
 // Force running AddDescriptors() at dynamic initialization time.
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY2 static ::_pbi::AddDescriptorsRunner dynamic_init_dummy_TemperatureData_2eproto(&descriptor_table_TemperatureData_2eproto);
+static bool dynamic_init_dummy_TemperatureData_2eproto = (static_cast<void>(::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_TemperatureData_2eproto)), true);
 
 // ===================================================================
 
+void TemperatureData::InitAsDefaultInstance() {
+}
 class TemperatureData::_Internal {
  public:
 };
 
-TemperatureData::TemperatureData(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                         bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
-  SharedCtor(arena, is_message_owned);
+TemperatureData::TemperatureData(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
+  SharedCtor();
+  RegisterArenaDtor(arena);
   // @@protoc_insertion_point(arena_constructor:TemperatureData)
 }
 TemperatureData::TemperatureData(const TemperatureData& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
-  TemperatureData* const _this = this; (void)_this;
-  new (&_impl_) Impl_{
-      decltype(_impl_.location_){}
-    , decltype(_impl_.temperature_){}
-    , /*decltype(_impl_._cached_size_)*/{}};
-
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  _impl_.location_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.location_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  location_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (!from._internal_location().empty()) {
-    _this->_impl_.location_.Set(from._internal_location(), 
-      _this->GetArenaForAllocation());
+    location_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_location(),
+      GetArena());
   }
-  _this->_impl_.temperature_ = from._impl_.temperature_;
+  temperature_ = from.temperature_;
   // @@protoc_insertion_point(copy_constructor:TemperatureData)
 }
 
-inline void TemperatureData::SharedCtor(
-    ::_pb::Arena* arena, bool is_message_owned) {
-  (void)arena;
-  (void)is_message_owned;
-  new (&_impl_) Impl_{
-      decltype(_impl_.location_){}
-    , decltype(_impl_.temperature_){0}
-    , /*decltype(_impl_._cached_size_)*/{}
-  };
-  _impl_.location_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.location_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+void TemperatureData::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_TemperatureData_TemperatureData_2eproto.base);
+  location_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  temperature_ = 0;
 }
 
 TemperatureData::~TemperatureData() {
   // @@protoc_insertion_point(destructor:TemperatureData)
-  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
-  (void)arena;
-    return;
-  }
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-inline void TemperatureData::SharedDtor() {
-  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  _impl_.location_.Destroy();
+void TemperatureData::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
+  location_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
+void TemperatureData::ArenaDtor(void* object) {
+  TemperatureData* _this = reinterpret_cast< TemperatureData* >(object);
+  (void)_this;
+}
+void TemperatureData::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void TemperatureData::SetCachedSize(int size) const {
-  _impl_._cached_size_.Set(size);
+  _cached_size_.Set(size);
 }
+const TemperatureData& TemperatureData::default_instance() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_TemperatureData_TemperatureData_2eproto.base);
+  return *internal_default_instance();
+}
+
 
 void TemperatureData::Clear() {
 // @@protoc_insertion_point(message_clear_start:TemperatureData)
-  uint32_t cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  _impl_.location_.ClearToEmpty();
-  _impl_.temperature_ = 0;
+  location_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  temperature_ = 0;
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* TemperatureData::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+const char* TemperatureData::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
-    uint32_t tag;
-    ptr = ::_pbi::ReadTag(ptr, &tag);
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
     switch (tag >> 3) {
       // float temperature = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 13)) {
-          _impl_.temperature_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 13)) {
+          temperature_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
           ptr += sizeof(float);
-        } else
-          goto handle_unusual;
+        } else goto handle_unusual;
         continue;
       // string location = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
           auto str = _internal_mutable_location();
-          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "TemperatureData.location"));
           CHK_(ptr);
-          CHK_(::_pbi::VerifyUTF8(str, "TemperatureData.location"));
-        } else
-          goto handle_unusual;
+        } else goto handle_unusual;
         continue;
-      default:
-        goto handle_unusual;
+      default: {
+      handle_unusual:
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
+          goto success;
+        }
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
+      }
     }  // switch
-  handle_unusual:
-    if ((tag == 0) || ((tag & 7) == 4)) {
-      CHK_(ptr);
-      ctx->SetLastTag(tag);
-      goto message_done;
-    }
-    ptr = UnknownFieldParse(
-        tag,
-        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
-        ptr, ctx);
-    CHK_(ptr != nullptr);
   }  // while
-message_done:
+success:
   return ptr;
 failure:
   ptr = nullptr;
-  goto message_done;
+  goto success;
 #undef CHK_
 }
 
-uint8_t* TemperatureData::_InternalSerialize(
-    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+::PROTOBUF_NAMESPACE_ID::uint8* TemperatureData::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:TemperatureData)
-  uint32_t cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // float temperature = 1;
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_temperature = this->_internal_temperature();
-  uint32_t raw_temperature;
-  memcpy(&raw_temperature, &tmp_temperature, sizeof(tmp_temperature));
-  if (raw_temperature != 0) {
+  if (!(this->temperature() <= 0 && this->temperature() >= 0)) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteFloatToArray(1, this->_internal_temperature(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(1, this->_internal_temperature(), target);
   }
 
   // string location = 2;
-  if (!this->_internal_location().empty()) {
+  if (this->location().size() > 0) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_location().data(), static_cast<int>(this->_internal_location().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
@@ -228,7 +212,7 @@ uint8_t* TemperatureData::_InternalSerialize(
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:TemperatureData)
@@ -239,55 +223,66 @@ size_t TemperatureData::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:TemperatureData)
   size_t total_size = 0;
 
-  uint32_t cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // string location = 2;
-  if (!this->_internal_location().empty()) {
+  if (this->location().size() > 0) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_location());
   }
 
   // float temperature = 1;
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_temperature = this->_internal_temperature();
-  uint32_t raw_temperature;
-  memcpy(&raw_temperature, &tmp_temperature, sizeof(tmp_temperature));
-  if (raw_temperature != 0) {
+  if (!(this->temperature() <= 0 && this->temperature() >= 0)) {
     total_size += 1 + 4;
   }
 
-  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
 }
 
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData TemperatureData::_class_data_ = {
-    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
-    TemperatureData::MergeImpl
-};
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*TemperatureData::GetClassData() const { return &_class_data_; }
+void TemperatureData::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:TemperatureData)
+  GOOGLE_DCHECK_NE(&from, this);
+  const TemperatureData* source =
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<TemperatureData>(
+          &from);
+  if (source == nullptr) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:TemperatureData)
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:TemperatureData)
+    MergeFrom(*source);
+  }
+}
 
-
-void TemperatureData::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
-  auto* const _this = static_cast<TemperatureData*>(&to_msg);
-  auto& from = static_cast<const TemperatureData&>(from_msg);
-  // @@protoc_insertion_point(class_specific_merge_from_start:TemperatureData)
-  GOOGLE_DCHECK_NE(&from, _this);
-  uint32_t cached_has_bits = 0;
+void TemperatureData::MergeFrom(const TemperatureData& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:TemperatureData)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (!from._internal_location().empty()) {
-    _this->_internal_set_location(from._internal_location());
+  if (from.location().size() > 0) {
+    _internal_set_location(from._internal_location());
   }
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_temperature = from._internal_temperature();
-  uint32_t raw_temperature;
-  memcpy(&raw_temperature, &tmp_temperature, sizeof(tmp_temperature));
-  if (raw_temperature != 0) {
-    _this->_internal_set_temperature(from._internal_temperature());
+  if (!(from.temperature() <= 0 && from.temperature() >= 0)) {
+    _internal_set_temperature(from._internal_temperature());
   }
-  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void TemperatureData::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:TemperatureData)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
 }
 
 void TemperatureData::CopyFrom(const TemperatureData& from) {
@@ -303,26 +298,19 @@ bool TemperatureData::IsInitialized() const {
 
 void TemperatureData::InternalSwap(TemperatureData* other) {
   using std::swap;
-  auto* lhs_arena = GetArenaForAllocation();
-  auto* rhs_arena = other->GetArenaForAllocation();
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &_impl_.location_, lhs_arena,
-      &other->_impl_.location_, rhs_arena
-  );
-  swap(_impl_.temperature_, other->_impl_.temperature_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
+  location_.Swap(&other->location_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  swap(temperature_, other->temperature_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata TemperatureData::GetMetadata() const {
-  return ::_pbi::AssignDescriptors(
-      &descriptor_table_TemperatureData_2eproto_getter, &descriptor_table_TemperatureData_2eproto_once,
-      file_level_metadata_TemperatureData_2eproto[0]);
+  return GetMetadataStatic();
 }
+
 
 // @@protoc_insertion_point(namespace_scope)
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::TemperatureData*
-Arena::CreateMaybeMessage< ::TemperatureData >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::TemperatureData* Arena::CreateMaybeMessage< ::TemperatureData >(Arena* arena) {
   return Arena::CreateMessageInternal< ::TemperatureData >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
