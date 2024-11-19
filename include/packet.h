@@ -194,7 +194,7 @@ class DDSPacket : public Packet
 {
   public:
     DDSHeader header;
-    std::variant<PublishData, SubscribeData, std::monostate> DDSData;
+    std::variant<PublishData, SubscribeData> DDSData;
 
     std::vector<std::uint8_t> Pack() const override
     {
@@ -230,10 +230,6 @@ class DDSPacket : public Packet
             SubscribeData sub_data;
             sub_data.Unpack(payload);
             DDSData = sub_data;
-        }
-        else
-        {
-            DDSData = std::monostate{};
         }
 
         return header_len + payload.size();

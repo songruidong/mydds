@@ -25,13 +25,13 @@ target_link_libraries(${PROJECT_NAME} ${PROTOBUF_LIBRARIES})
 
 
 #test
-set(GTest_DIR /usr/local/lib/cmake/GTest)
+# set(GTest_DIR /usr/local/lib/cmake/GTest)
 find_package(GTest REQUIRED)
 # include(FetchContent)
 # FetchContent_Declare(
 #   googletest
-#   URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-#   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+#   URL https://ghp.ci/https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+#   # DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 # )
 # # For Windows: Prevent overriding the parent project's compiler/linker settings
 # set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)

@@ -1,7 +1,8 @@
+#include "../include/packet.h"
 #include <gtest/gtest.h>
-#include "packet.h"
+#include <iostream>
 
-TEST(PacketTest, DDSHeaderPackAndUnpack) {
+TEST(PacketTest, DDSHeaderPackUnpack) {
     DDSHeader header;
     header.type = 1;
 
@@ -14,139 +15,144 @@ TEST(PacketTest, DDSHeaderPackAndUnpack) {
     EXPECT_EQ(unpackedHeader.type, 1);
 }
 
-TEST(PacketTest, TopicNamePackAndUnpack) {
-    TopicName topic;
-    topic.length = 5;
-    topic.name = "TestTopic";
+TEST(PacketTest, TopicNamePackUnpack) {
+    TopicName topicName;
+    topicName.length = 4;
+    topicName.name = "Test";
 
-    std::vector<uint8_t> packed = topic.Pack();
+    std::vector<uint8_t> packed = topicName.Pack();
+    EXPECT_EQ(packed.size(), 5);
 
-    TopicName unpackedTopic;
-    unpackedTopic.Unpack(packed);
-
-    EXPECT_EQ(unpackedTopic.length, 5);
-    EXPECT_EQ(unpackedTopic.name, "TestTopic");
+    TopicName unpackedTopicName;
+    unpackedTopicName.Unpack(packed);
+    EXPECT_EQ(unpackedTopicName.length, 4);
+    EXPECT_EQ(unpackedTopicName.name, "Test");
 }
 
-TEST(PacketTest, TopicDataPackAndUnpack) {
-    TopicData data;
-    data.length = 10;
-    data.data = "TestData";
+TEST(PacketTest, TopicDataPackUnpack) {
+    TopicData topicData;
+    topicData.length = 8;
+    topicData.data = "TestData";
 
-    std::vector<uint8_t> packed = data.Pack();
+    std::vector<uint8_t> packed = topicData.Pack();
+    GTEST_LOG_(INFO) << packed.size(); 
+    EXPECT_EQ(packed.size(), 9);
 
-    TopicData unpackedData;
-    unpackedData.Unpack(packed);
-
-    EXPECT_EQ(unpackedData.length, 10);
-    EXPECT_EQ(unpackedData.data, "TestData");
+    TopicData unpackedTopicData;
+    unpackedTopicData.Unpack(packed);
+    EXPECT_EQ(unpackedTopicData.length, 8);
+    EXPECT_EQ(unpackedTopicData.data, "TestData");
 }
 
-TEST(PacketTest, TopicPacketPackAndUnpack) {
-    TopicPacket packet;
-    packet.name.length = 5;
-    packet.name.name = "TestTopic";
-    packet.data.length = 10;
-    packet.data.data = "TestData";
+TEST(PacketTest, TopicPacketPackUnpack) {
+    TopicPacket topicPacket;
+    topicPacket.name.length = 5;
+    topicPacket.name.name = "Test1";
+    topicPacket.data.length = 10;
+    topicPacket.data.data = "TestData10";
 
-    std::vector<uint8_t> packed = packet.Pack();
+    std::vector<uint8_t> packed = topicPacket.Pack();
+    EXPECT_EQ(packed.size(), 17);
 
-    TopicPacket unpackedPacket;
-    unpackedPacket.Unpack(packed);
-
-    EXPECT_EQ(unpackedPacket.name.length, 5);
-    EXPECT_EQ(unpackedPacket.name.name, "TestTopic");
-    EXPECT_EQ(unpackedPacket.data.length, 10);
-    EXPECT_EQ(unpackedPacket.data.data, "TestData");
+    TopicPacket unpackedTopicPacket;
+    unpackedTopicPacket.Unpack(packed);
+    EXPECT_EQ(unpackedTopicPacket.name.length, 5);
+    EXPECT_EQ(unpackedTopicPacket.name.name, "Test1");
+    EXPECT_EQ(unpackedTopicPacket.data.length, 10);
+    EXPECT_EQ(unpackedTopicPacket.data.data, "TestData10");
 }
 
-TEST(PacketTest, PublishDataPackAndUnpack) {
+TEST(PacketTest, PublishDataPackUnpack) {
     PublishData publishData;
-    TopicPacket packet1;
-    packet1.name.length = 5;
-    packet1.name.name = "TestTopic1";
-    packet1.data.length = 10;
-    packet1.data.data = "TestData1";
-    publishData.data.push_back(packet1);
+    TopicPacket topicPacket1;
+    topicPacket1.name.length = 5;
+    topicPacket1.name.name = "Test1";
+    topicPacket1.data.length = 10;
+    topicPacket1.data.data = "TestData10";
+    TopicPacket topicPacket2;
+    topicPacket2.name.length = 5;
+    topicPacket2.name.name = "Test2";
+    topicPacket2.data.length = 10;
+    topicPacket2.data.data = "TestData20";
 
-    TopicPacket packet2;
-    packet2.name.length = 6;
-    packet2.name.name = "TestTopic2";
-    packet2.data.length = 11;
-    packet2.data.data = "TestData2";
-    publishData.data.push_back(packet2);
+    publishData.data.push_back(topicPacket1);
+    publishData.data.push_back(topicPacket2);
 
     std::vector<uint8_t> packed = publishData.Pack();
+    EXPECT_EQ(packed.size(), 34);
 
     PublishData unpackedPublishData;
     unpackedPublishData.Unpack(packed);
-
     EXPECT_EQ(unpackedPublishData.data.size(), 2);
-
     EXPECT_EQ(unpackedPublishData.data[0].name.length, 5);
-    EXPECT_EQ(unpackedPublishData.data[0].name.name, "TestTopic1");
+    EXPECT_EQ(unpackedPublishData.data[0].name.name, "Test1");
     EXPECT_EQ(unpackedPublishData.data[0].data.length, 10);
-    EXPECT_EQ(unpackedPublishData.data[0].data.data, "TestData1");
-
-    EXPECT_EQ(unpackedPublishData.data[1].name.length, 6);
-    EXPECT_EQ(unpackedPublishData.data[1].name.name, "TestTopic2");
-    EXPECT_EQ(unpackedPublishData.data[1].data.length, 11);
-    EXPECT_EQ(unpackedPublishData.data[1].data.data, "TestData2");
+    EXPECT_EQ(unpackedPublishData.data[0].data.data, "TestData10");
+    EXPECT_EQ(unpackedPublishData.data[1].name.length, 5);
+    EXPECT_EQ(unpackedPublishData.data[1].name.name, "Test2");
+    EXPECT_EQ(unpackedPublishData.data[1].data.length, 10);
+    EXPECT_EQ(unpackedPublishData.data[1].data.data, "TestData20");
 }
 
-TEST(PacketTest, SubscribeDataPackAndUnpack) {
+TEST(PacketTest, SubscribeDataPackUnpack) {
     SubscribeData subscribeData;
-    TopicName topic1;
-    topic1.length = 5;
-    topic1.name = "TestTopic1";
-    subscribeData.data.push_back(topic1);
+    TopicName topicName1;
+    topicName1.length = 5;
+    topicName1.name = "Test1";
+    TopicName topicName2;
+    topicName2.length = 5;
+    topicName2.name = "Test2";
 
-    TopicName topic2;
-    topic2.length = 6;
-    topic2.name = "TestTopic2";
-    subscribeData.data.push_back(topic2);
+    subscribeData.data.push_back(topicName1);
+    subscribeData.data.push_back(topicName2);
 
     std::vector<uint8_t> packed = subscribeData.Pack();
+    EXPECT_EQ(packed.size(), 12);
 
     SubscribeData unpackedSubscribeData;
     unpackedSubscribeData.Unpack(packed);
-
     EXPECT_EQ(unpackedSubscribeData.data.size(), 2);
-
     EXPECT_EQ(unpackedSubscribeData.data[0].length, 5);
-    EXPECT_EQ(unpackedSubscribeData.data[0].name, "TestTopic1");
-
-    EXPECT_EQ(unpackedSubscribeData.data[1].length, 6);
-    EXPECT_EQ(unpackedSubscribeData.data[1].name, "TestTopic2");
+    EXPECT_EQ(unpackedSubscribeData.data[0].name, "Test1");
+    EXPECT_EQ(unpackedSubscribeData.data[1].length, 5);
+    EXPECT_EQ(unpackedSubscribeData.data[1].name, "Test2");
 }
 
-TEST(PacketTest, DDSPacketPackAndUnpack) {
-    DDSPacket packet;
-    packet.header.type = 1;
-
+TEST(PacketTest, DDSPacketPackUnpack) {
+    DDSPacket ddsPacket;
+    ddsPacket.header.type = 1;
     PublishData publishData;
-    TopicPacket packet1;
-    packet1.name.length = 5;
-    packet1.name.name = "TestTopic1";
-    packet1.data.length = 10;
-    packet1.data.data = "TestData1";
-    publishData.data.push_back(packet1);
+    TopicPacket topicPacket1;
+    topicPacket1.name.length = 5;
+    topicPacket1.name.name = "Test1";
+    topicPacket1.data.length = 10;
+    topicPacket1.data.data = "TestData10";
+    TopicPacket topicPacket2;
+    topicPacket2.name.length = 5;
+    topicPacket2.name.name = "Test2";
+    topicPacket2.data.length = 10;
+    topicPacket2.data.data = "TestData20";
 
-    packet.DDSData = publishData;
+    publishData.data.push_back(topicPacket1);
+    publishData.data.push_back(topicPacket2);
 
-    std::vector<uint8_t> packed = packet.Pack();
+    ddsPacket.DDSData = publishData;
 
-    DDSPacket unpackedPacket;
-    unpackedPacket.Unpack(packed);
+    std::vector<uint8_t> packed = ddsPacket.Pack();
+    EXPECT_EQ(packed.size(), 35);
 
-    EXPECT_EQ(unpackedPacket.header.type, 1);
-
-    auto publishDataVariant = std::get<PublishData>(unpackedPacket.DDSData);
-
-    EXPECT_EQ(publishDataVariant.data.size(), 1);
-
-    EXPECT_EQ(publishDataVariant.data[0].name.length, 5);
-    EXPECT_EQ(publishDataVariant.data[0].name.name, "TestTopic1");
-    EXPECT_EQ(publishDataVariant.data[0].data.length, 10);
-    EXPECT_EQ(publishDataVariant.data[0].data.data, "TestData1");
+    DDSPacket unpackedDDSPacket;
+    unpackedDDSPacket.Unpack(packed);
+    EXPECT_EQ(unpackedDDSPacket.header.type, 1);
+    EXPECT_EQ(std::holds_alternative<PublishData>(unpackedDDSPacket.DDSData),true);
+    PublishData unpackedPublishData = std::get<PublishData>(unpackedDDSPacket.DDSData);
+    EXPECT_EQ(unpackedPublishData.data.size(), 2);
+    EXPECT_EQ(unpackedPublishData.data[0].name.length, 5);
+    EXPECT_EQ(unpackedPublishData.data[0].name.name, "Test1");
+    EXPECT_EQ(unpackedPublishData.data[0].data.length, 10);
+    EXPECT_EQ(unpackedPublishData.data[0].data.data, "TestData10");
+    EXPECT_EQ(unpackedPublishData.data[1].name.length, 5);
+    EXPECT_EQ(unpackedPublishData.data[1].name.name, "Test2");
+    EXPECT_EQ(unpackedPublishData.data[1].data.length, 10);
+    EXPECT_EQ(unpackedPublishData.data[1].data.data, "TestData20");
 }
