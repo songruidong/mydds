@@ -19,7 +19,7 @@ class Topic
         {
             throw std::invalid_argument("Key cannot be negative.");
         }
-        std::lock_guard<std::mutex> lock(topic_mutex);  // 加锁
+        // std::lock_guard<std::mutex> lock(topic_mutex);  // 加锁
         storage[key] = data.SerializeAsString();
     }
 
@@ -27,7 +27,7 @@ class Topic
     template <typename ProtobufType>
     ProtobufType getData(int key) const
     {
-        std::lock_guard<std::mutex> lock(topic_mutex);  // 加锁
+        // std::lock_guard<std::mutex> lock(topic_mutex);  // 加锁
         auto it = storage.find(key);
         if (it == storage.end())
         {
@@ -45,14 +45,14 @@ class Topic
     // 删除数据
     void removeData(int key)
     {
-        std::lock_guard<std::mutex> lock(topic_mutex);  // 加锁
+        // std::lock_guard<std::mutex> lock(topic_mutex);  // 加锁
         storage.erase(key);
     }
 
     // 列出所有 keys
     std::vector<int> listKeys() const
     {
-        std::lock_guard<std::mutex> lock(topic_mutex);  // 加锁
+        // std::lock_guard<std::mutex> lock(topic_mutex);  // 加锁
         std::vector<int> keys;
         for (const auto &[key, _] : storage)
         {
@@ -67,7 +67,7 @@ class Topic
 
   private:
     std::string topic_name;                        // Topic 名称
-    mutable std::mutex topic_mutex;                // 保护 Topic 数据的互斥锁
+    // mutable std::mutex topic_mutex;                // 保护 Topic 数据的互斥锁
     std::unordered_map<int, std::string> storage;  // 存储 Protobuf 数据的哈希表
 };
 
