@@ -188,7 +188,40 @@ class SubscribeData : public Packet
         return total_processed;
     }
 };
+// class DiscoverData : public Packet
+// {
+//     public:
+//     std::vector<TopicName> data;
 
+//     std::vector<std::uint8_t> Pack() const override
+//     {
+//         std::vector<std::uint8_t> ret;
+//         for (const auto &topic : data)
+//         {
+//             auto packed_topic = topic.Pack();
+//             ret.insert(ret.end(), packed_topic.begin(), packed_topic.end());
+//         }
+//         return ret;
+//     }
+
+//     std::uint32_t Unpack(const std::vector<std::uint8_t> &bytes) override
+//     {
+//         std::uint32_t total_processed = 0;
+//         std::size_t i                 = 0;
+
+//         while (i < bytes.size())
+//         {
+//             TopicName topic;
+//             auto processed = topic.Unpack({bytes.begin() + i, bytes.end()});
+//             data.push_back(topic);
+//             i += processed;
+//             total_processed += processed;
+//         }
+
+//         return total_processed;
+//     }
+// };
+using DiscoverData = SubscribeData;
 // DDSPacket
 class DDSPacket : public Packet
 {
@@ -200,15 +233,28 @@ class DDSPacket : public Packet
     {
         std::vector<std::uint8_t> ret = header.Pack();
 
-        if (std::holds_alternative<PublishData>(DDSData))
+        switch (DDSData.index())
         {
-            auto publish_data = std::get<PublishData>(DDSData).Pack();
-            ret.insert(ret.end(), publish_data.begin(), publish_data.end());
-        }
-        else if (std::holds_alternative<SubscribeData>(DDSData))
-        {
-            auto subscribe_data = std::get<SubscribeData>(DDSData).Pack();
-            ret.insert(ret.end(), subscribe_data.begin(), subscribe_data.end());
+            case 0:  // PublishData
+            {
+                auto publish_data = std::get<PublishData>(DDSData).Pack();
+                ret.insert(ret.end(), publish_data.begin(), publish_data.end());
+                break;
+            }
+            case 1:  // SubscribeData
+            {
+                auto subscribe_data = std::get<SubscribeData>(DDSData).Pack();
+                ret.insert(ret.end(), subscribe_data.begin(), subscribe_data.end());
+                break;
+            }
+            case 2:  // DiscoverData
+            {
+                auto discover_data = std::get<DiscoverData>(DDSData).Pack();
+                ret.insert(ret.end(), discover_data.begin(), discover_data.end());
+                break;
+            }
+            default:
+                throw std::invalid_argument("Unknown packet type");
         }
 
         return ret;
@@ -218,18 +264,31 @@ class DDSPacket : public Packet
     {
         auto header_len = header.Unpack(bytes);
         auto payload    = std::vector<std::uint8_t>(bytes.begin() + header_len, bytes.end());
-
-        if (header.type == 1)
+        switch (header.type)
         {
-            PublishData pub_data;
-            pub_data.Unpack(payload);
-            DDSData = pub_data;
-        }
-        else if (header.type == 2)
-        {
-            SubscribeData sub_data;
-            sub_data.Unpack(payload);
-            DDSData = sub_data;
+            case 0:
+            {
+                DiscoverData disc_data;
+                disc_data.Unpack(payload);
+                DDSData = disc_data;
+                break;
+            }
+            case 1:
+            {
+                PublishData pub_data;
+                pub_data.Unpack(payload);
+                DDSData = pub_data;
+                break;
+            }
+            case 2:
+            {
+                SubscribeData sub_data;
+                sub_data.Unpack(payload);
+                DDSData = sub_data;
+                break;
+            }
+            default:
+                throw std::invalid_argument("Unknown packet type");
         }
 
         return header_len + payload.size();
