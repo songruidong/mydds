@@ -28,7 +28,11 @@ class Node
     }
     void init()
     {
-        if (io_uring_queue_init(QUEUE_DEPTH, &ring, 0) < 0)
+        struct io_uring_params params;
+        memset(&params, 0, sizeof(params));
+        // params.flags |= IORING_SETUP_SQPOLL;
+        // params.sq_thread_idle = 2000;
+        if (io_uring_queue_init_params(QUEUE_DEPTH, &ring, &params) < 0)
         {
             throw std::runtime_error("Failed to initialize io_uring");
         }
@@ -39,7 +43,7 @@ class Node
         this->tick();
         // 启动运行线程
         running_       = true;
-        worker_thread_ = std::thread(&Node::run, this);
+        worker_thread_.reset(new std::thread(&Node::run, this));
     }
     int init_udp_socket()
     {
@@ -109,6 +113,7 @@ class Node
         IoInfo *info = new IoInfo;
         info->type   = EventType::Multicast;
         io_uring_sqe_set_data(sqe, info);
+
         // 提交请求
         if (io_uring_submit(&ring) < 0)
         {
@@ -260,6 +265,7 @@ class Node
         IoInfo *info = new IoInfo;
         info->type   = EventType::Timer;
         io_uring_sqe_set_data(sqe, info);
+
         // 提交定时器任务
         if (io_uring_submit(&ring) < 0)
         {
@@ -410,11 +416,11 @@ class Node
                         SPDLOG_INFO("default");
                     }
                 }
-                delete (IoInfo*)cqe->user_data;
+                delete (IoInfo *)cqe->user_data;
                 // std::cout << "Request completed successfully, res=" << cqe->res << std::endl;
             }
             io_uring_cq_advance(&ring, count);
-
+            SPDLOG_INFO("{}", count);
         }
     }
 
@@ -431,7 +437,7 @@ class Node
     const int MULTICAST_PORT    = 5007;         // 目标端口
     const int LOCAL_PORT        = 12345;        // 本地端口（固定发送端口）
 
-    std::thread worker_thread_;  // 用于处理 IO 的线程
+    std::unique_ptr<std::thread> worker_thread_;  // 用于处理 IO 的线程
     std::atomic<bool> running_;  // 控制线程运行状态
 
     struct sockaddr_in opposite_addr;  // 对方的地址信息
