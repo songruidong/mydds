@@ -106,9 +106,9 @@ class Node
         msg.msg_iovlen  = 1;
         // 准备 sendmsg 操作
         io_uring_prep_sendmsg(sqe, udp_socket, &msg, 0);
-        IoInfo info;
-        info.type = EventType::Multicast;
-        io_uring_sqe_set_data(sqe, &info);
+        IoInfo *info = new IoInfo;
+        info->type   = EventType::Multicast;
+        io_uring_sqe_set_data(sqe, info);
         // 提交请求
         if (io_uring_submit(&ring) < 0)
         {
@@ -150,18 +150,18 @@ class Node
         IoInfo *info = new IoInfo;
         info->type   = EventType::Read;
         io_uring_sqe_set_data(sqe, info);
-        // // 提交请求
-        // if (io_uring_submit(&ring) < 0)
-        // {
-        //     // close(udp_socket);
-        //     io_uring_queue_exit(&ring);
-        //     throw std::runtime_error("Failed to submit sendmsg request");
-        // }
+        // 提交请求
+        if (io_uring_submit(&ring) < 0)
+        {
+            // close(udp_socket);
+            io_uring_queue_exit(&ring);
+            throw std::runtime_error("Failed to submit sendmsg request");
+        }
         return 0;
     }
     bool create_publish_topic(const std::string &topic_name, std::shared_ptr<Topic> topic = nullptr)
     {
-        auto ret = topic_manager_->create_publishTopic(topic_name,topic);
+        auto ret = topic_manager_->create_publishTopic(topic_name, topic);
         return ret;
     }
     bool create_subscribe_topic(const std::string &topic_name, std::shared_ptr<Topic> topic)
@@ -276,13 +276,76 @@ class Node
         while (running_)
         {
             struct io_uring_cqe *cqe;
-            // spdlog::info("1");
-            int ret = io_uring_submit_and_wait(&ring, 0);
+            // SPDLOG_INFO("1");
+            // if (io_uring_submit(&ring) < 0)
+            // {
+            //     // close(udp_socket);
+            //     io_uring_queue_exit(&ring);
+            //     throw std::runtime_error("Failed to submit sendmsg request");
+            // }
+            int ret = io_uring_submit_and_wait(&ring, 1);
             // int ret = io_uring_wait_cqe(&ring, &cqe);
-            // spdlog::info("2");
+            // // SPDLOG_INFO("2");
             // if (ret < 0)
             // {
             //     std::cerr << "io_uring_wait_cqe failed: " << strerror(-ret) << std::endl;
+            // }else
+            // {
+            //     if (cqe->res < 0)
+            //     {
+            //         // SPDLOG_INFO("case -ETIME:");
+            //         switch (cqe->res)
+            //         {
+            //             case -ETIME:
+            //             {
+            //                 SPDLOG_INFO("case -ETIME:");
+            //                 break;
+            //             }
+            //             default:
+            //             {
+            //                 // std::cerr << "Request failed: " << strerror(-cqe->res) << std::endl;
+            //                 SPDLOG_INFO("Request failed: {}", strerror(-cqe->res));
+            //                 continue;
+            //             }
+            //         }
+            //     }
+            //     // std::cout << "count2:" << count << std::endl;
+            //     // 自定义逻辑，处理 CQE
+            //     switch (((IoInfo *)cqe->user_data)->type)
+            //     {
+            //         case EventType::Multicast:
+            //         {
+            //             // 处理 Multicast 事件
+            //             // std::cout << "Multicast event" << std::endl;
+            //             SPDLOG_INFO("case EventType::Multicast:");
+            //             break;
+            //         }
+            //         case EventType::Unicast:
+            //         {
+            //             // 处理 Unicast 事件
+            //             // std::cout << "Unicast event" << std::endl;
+            //             break;
+            //         }
+            //         case EventType::Read:
+            //         {
+            //             // 处理 Read 事件
+            //             // std::cout << "Read event" << std::endl;
+
+            //             break;
+            //         }
+            //         case EventType::Timer:
+            //         {
+            //             SPDLOG_INFO("case EventType::Timer:");
+            //             tick();
+            //             break;
+            //         }
+            //         default:
+            //         {
+            //             SPDLOG_INFO("default");
+            //         }
+            //     }
+            //     delete (IoInfo *)cqe->user_data;
+            //     io_uring_cqe_seen(&ring, cqe);
             // }
 
             unsigned head;
@@ -296,18 +359,18 @@ class Node
                 // 处理完成的请求
                 if (cqe->res < 0)
                 {
-                    // spdlog::info("case -ETIME:");
+                    // SPDLOG_INFO("case -ETIME:");
                     switch (cqe->res)
                     {
                         case -ETIME:
                         {
-                            spdlog::info("case -ETIME:");
+                            SPDLOG_INFO("case -ETIME:");
                             break;
                         }
                         default:
                         {
                             // std::cerr << "Request failed: " << strerror(-cqe->res) << std::endl;
-                            spdlog::info("Request failed: {}", strerror(-cqe->res));
+                            SPDLOG_INFO("Request failed: {}", strerror(-cqe->res));
                             continue;
                         }
                     }
@@ -320,7 +383,7 @@ class Node
                     {
                         // 处理 Multicast 事件
                         // std::cout << "Multicast event" << std::endl;
-                        spdlog::info("case EventType::Multicast:");
+                        SPDLOG_INFO("case EventType::Multicast:");
                         break;
                     }
                     case EventType::Unicast:
@@ -338,19 +401,20 @@ class Node
                     }
                     case EventType::Timer:
                     {
-                        spdlog::info("case EventType::Timer:");
+                        SPDLOG_INFO("case EventType::Timer:");
                         tick();
                         break;
                     }
-                    default:{
-                        spdlog::info("default");
+                    default:
+                    {
+                        SPDLOG_INFO("default");
                     }
                 }
+                delete (IoInfo*)cqe->user_data;
                 // std::cout << "Request completed successfully, res=" << cqe->res << std::endl;
             }
             io_uring_cq_advance(&ring, count);
-            // 标记 CQE 已完成
-            // io_uring_cqe_seen(&ring, cqe);
+
         }
     }
 

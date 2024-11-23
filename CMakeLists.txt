@@ -11,7 +11,7 @@ if(NOT TARGET spdlog)
     find_package(spdlog REQUIRED)
 endif()
 set(CMAKE_BUILD_TYPE Debug)
-add_definitions(-DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
+add_definitions(-DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
 
 # 包含头文件目录
 include_directories(${PROJECT_SOURCE_DIR}/include)
