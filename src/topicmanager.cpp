@@ -6,7 +6,7 @@ std::shared_ptr<Topic> TopicManager::insertTopic(const std::string &name, std::s
     // std::lock_guard<std::mutex> lock(manager_mutex); // 加锁
     if (topics.find(name).size()!= 0)
     {
-        throw std::runtime_error("Topic already exists: " + name);
+        return nullptr;
     }
     topic->setName(name);
     topics.insert(name, topic);

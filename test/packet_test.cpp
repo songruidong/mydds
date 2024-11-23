@@ -11,7 +11,7 @@ TEST(PacketTest, DDSHeaderPackUnpack) {
     EXPECT_EQ(packed[0], 1);
 
     DDSHeader unpackedHeader;
-    unpackedHeader.Unpack(packed);
+    unpackedHeader.Unpack(packed.begin(),packed.end());
     EXPECT_EQ(unpackedHeader.type, 1);
 }
 
@@ -24,7 +24,7 @@ TEST(PacketTest, TopicNamePackUnpack) {
     EXPECT_EQ(packed.size(), 5);
 
     TopicName unpackedTopicName;
-    unpackedTopicName.Unpack(packed);
+    unpackedTopicName.Unpack(packed.begin(),packed.end());
     EXPECT_EQ(unpackedTopicName.length, 4);
     EXPECT_EQ(unpackedTopicName.name, "Test");
 }
@@ -39,7 +39,7 @@ TEST(PacketTest, TopicDataPackUnpack) {
     EXPECT_EQ(packed.size(), 9);
 
     TopicData unpackedTopicData;
-    unpackedTopicData.Unpack(packed);
+    unpackedTopicData.Unpack(packed.begin(),packed.end());
     EXPECT_EQ(unpackedTopicData.length, 8);
     EXPECT_EQ(unpackedTopicData.data, "TestData");
 }
@@ -55,7 +55,7 @@ TEST(PacketTest, TopicPacketPackUnpack) {
     EXPECT_EQ(packed.size(), 17);
 
     TopicPacket unpackedTopicPacket;
-    unpackedTopicPacket.Unpack(packed);
+    unpackedTopicPacket.Unpack(packed.begin(),packed.end());
     EXPECT_EQ(unpackedTopicPacket.name.length, 5);
     EXPECT_EQ(unpackedTopicPacket.name.name, "Test1");
     EXPECT_EQ(unpackedTopicPacket.data.length, 10);
@@ -82,7 +82,7 @@ TEST(PacketTest, PublishDataPackUnpack) {
     EXPECT_EQ(packed.size(), 34);
 
     PublishData unpackedPublishData;
-    unpackedPublishData.Unpack(packed);
+    unpackedPublishData.Unpack(packed.begin(),packed.end());
     EXPECT_EQ(unpackedPublishData.data.size(), 2);
     EXPECT_EQ(unpackedPublishData.data[0].name.length, 5);
     EXPECT_EQ(unpackedPublishData.data[0].name.name, "Test1");
@@ -110,7 +110,7 @@ TEST(PacketTest, SubscribeDataPackUnpack) {
     EXPECT_EQ(packed.size(), 12);
 
     SubscribeData unpackedSubscribeData;
-    unpackedSubscribeData.Unpack(packed);
+    unpackedSubscribeData.Unpack(packed.begin(),packed.end());
     EXPECT_EQ(unpackedSubscribeData.data.size(), 2);
     EXPECT_EQ(unpackedSubscribeData.data[0].length, 5);
     EXPECT_EQ(unpackedSubscribeData.data[0].name, "Test1");
@@ -142,7 +142,7 @@ TEST(PacketTest, DDSPacketPackUnpack) {
     EXPECT_EQ(packed.size(), 35);
 
     DDSPacket unpackedDDSPacket;
-    unpackedDDSPacket.Unpack(packed);
+    unpackedDDSPacket.Unpack(packed.begin(),packed.end());
     EXPECT_EQ(unpackedDDSPacket.header.type, 1);
     EXPECT_EQ(std::holds_alternative<PublishData>(unpackedDDSPacket.DDSData),true);
     PublishData unpackedPublishData = std::get<PublishData>(unpackedDDSPacket.DDSData);

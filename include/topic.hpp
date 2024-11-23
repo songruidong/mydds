@@ -24,8 +24,7 @@ class Topic
     }
 
     // 获取 Protobuf 数据，按 key 检索
-    template <typename ProtobufType>
-    ProtobufType getData(int key) const
+    std::string getData(int key) const
     {
         // std::lock_guard<std::mutex> lock(topic_mutex);  // 加锁
         auto it = storage.find(key);
@@ -34,12 +33,12 @@ class Topic
             throw std::runtime_error("Key not found: " + std::to_string(key));
         }
 
-        ProtobufType data;
-        if (!data.ParseFromString(it->second))
-        {
-            throw std::runtime_error("Failed to parse Protobuf data!");
-        }
-        return data;
+        // ProtobufType data;
+        // if (!data.ParseFromString(it->second))
+        // {
+        //     throw std::runtime_error("Failed to parse Protobuf data!");
+        // }
+        return it->second;
     }
 
     // 删除数据
@@ -66,7 +65,7 @@ class Topic
     void setName(const std::string_view &name) { this->topic_name = name; }
 
   private:
-    std::string topic_name;                        // Topic 名称
+    std::string topic_name;  // Topic 名称
     // mutable std::mutex topic_mutex;                // 保护 Topic 数据的互斥锁
     std::unordered_map<int, std::string> storage;  // 存储 Protobuf 数据的哈希表
 };

@@ -1,10 +1,15 @@
+#ifndef __UTILS_H__
+#define __UTILS_H__
+
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
+
 class Util
 {
   public:
-    static std::uint32_t unpack_length(const std::vector<std::uint8_t> &bytes, std::uint32_t &length)
+    template <typename Iterator>
+    static std::uint32_t unpack_length(Iterator begin, Iterator end, std::uint32_t &length)
     {
         length                   = 0;
         std::uint32_t multiplier = 1;
@@ -12,9 +17,11 @@ class Util
         constexpr std::uint32_t MAX_LENGTH = 268435455;
         constexpr std::size_t MAX_BYTES    = 4;
 
-        for (std::size_t i = 0; i < bytes.size(); ++i)
+        std::size_t processed_bytes = 0;
+
+        for (auto it = begin; it != end; ++it, ++processed_bytes)
         {
-            std::uint8_t encoded_byte = bytes[i];
+            std::uint8_t encoded_byte = *it;
             length += (encoded_byte & 127) * multiplier;
 
             if (length > MAX_LENGTH)
@@ -24,12 +31,12 @@ class Util
 
             if ((encoded_byte & 128) == 0)
             {
-                return i + 1;  // 解码完成
+                return processed_bytes + 1;  // 解码完成
             }
 
             multiplier *= 128;
 
-            if (i >= MAX_BYTES - 1)
+            if (processed_bytes >= MAX_BYTES - 1)
             {
                 throw std::invalid_argument("Variable-length encoding exceeds 4 bytes.");
             }
@@ -37,6 +44,7 @@ class Util
 
         throw std::invalid_argument("Incomplete variable-length encoding.");
     }
+
     static std::vector<std::uint8_t> pack_length(std::uint32_t length)
     {
         constexpr std::uint32_t MAX_LENGTH = 268435455;  // MQTT 可变长度字段的最大值 (0xFFFFFFF)
@@ -65,3 +73,5 @@ class Util
         return encoded_bytes;
     }
 };
+
+#endif  // __UTILS_H__
