@@ -48,7 +48,7 @@ class TopicName : public Packet
   public:
     std::uint32_t length;
     std::string name;
-    TopicName() =  default;
+    TopicName() = default;
     TopicName(std::uint32_t length, std::string name) : length(length), name(name) {}
     virtual ~TopicName() = default;
     std::vector<std::uint8_t> Pack() const override
@@ -305,37 +305,50 @@ class DDSPacket : public Packet
         return std::distance(begin, end);
     }
     ~DDSPacket() = default;
-    static std::vector<std::uint8_t> create_publish_packet(const std::shared_ptr<Topic>& topic_ptr)
+    static std::vector<std::uint8_t> create_publish_packet(const std::vector<std::shared_ptr<Topic>> &topics)
     {
         // auto topic_ptr = topics[0];
-        TopicPacket topicpacket;
-        topicpacket.name.name   = topic_ptr->getName();
-        topicpacket.name.length = topic_ptr->getName().size();
-        topicpacket.data.data   = topic_ptr->getData(0);
-        topicpacket.data.length = topic_ptr->getData(0).length();
         PublishData publish_data;
-        publish_data.data.push_back(std::move(topicpacket));
-
+        for (auto &topic_ptr : topics)
+        {
+            TopicPacket topicpacket;
+            topicpacket.name.name   = topic_ptr->getName();
+            topicpacket.name.length = topic_ptr->getName().size();
+            topicpacket.data.data   = topic_ptr->getData(0);
+            topicpacket.data.length = topic_ptr->getData(0).length();
+            publish_data.data.push_back(std::move(topicpacket));
+        }
         DDSPacket packet;
         packet.header.type = static_cast<uint8_t>(CommunicationType::Publish);
         packet.DDSData     = publish_data;
         return packet.Pack();
     }
-    static std::vector<std::uint8_t> create_subscribe_packet(const std::vector<std::shared_ptr<Topic>>& topics)
+    static std::vector<std::uint8_t> create_subscribe_packet(const std::vector<std::shared_ptr<Topic>> &topics)
     {
-        auto topic_ptr = topics[0];
+        // auto topic_ptr = topics[0];
         DDSPacket packet;
         packet.header.type = static_cast<uint8_t>(CommunicationType::Subscribe);
         SubscribeData subscribe_data;
-        for(auto& topic_ptr: topics)
+        for (auto &topic_ptr : topics)
         {
             // TopicName topicname = ;
-             subscribe_data.data.push_back(TopicName(topic_ptr->getName().size(), topic_ptr->getName()));
+            subscribe_data.data.push_back(TopicName(topic_ptr->getName().size(), topic_ptr->getName()));
         }
-        packet.DDSData     = subscribe_data;
-        return packet.Pack();        
+        packet.DDSData = subscribe_data;
+        return packet.Pack();
     }
-    
+    static std::vector<std::uint8_t> create_discover_packet(const std::vector<std::shared_ptr<Topic>> &topics) {
+        DDSPacket packet;
+        packet.header.type = static_cast<uint8_t>(CommunicationType::Discover);
+        DiscoverData discover_data;
+        for (auto &topic_ptr : topics)
+        {
+            // TopicName topicname = ;
+            discover_data.data.push_back(TopicName(topic_ptr->getName().size(), topic_ptr->getName()));
+        }
+        packet.DDSData = discover_data;
+        return packet.Pack();
+    }
 };
 
 #endif  // __PACKET_H__

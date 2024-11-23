@@ -6,6 +6,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "publisherinfo.h"
+#include "subscriberinfo.h"
 class Topic
 {
   public:
@@ -22,6 +24,8 @@ class Topic
         // std::lock_guard<std::mutex> lock(topic_mutex);  // 加锁
         storage[key] = data.SerializeAsString();
     }
+
+
 
     // 获取 Protobuf 数据，按 key 检索
     std::string getData(int key) const
@@ -62,12 +66,14 @@ class Topic
 
     // 获取 Topic 名称
     const std::string &getName() const { return topic_name; }
-    void setName(const std::string_view &name) { this->topic_name = name; }
+    void setName(const std::string &name) { this->topic_name = name; }
 
   private:
     std::string topic_name;  // Topic 名称
     // mutable std::mutex topic_mutex;                // 保护 Topic 数据的互斥锁
     std::unordered_map<int, std::string> storage;  // 存储 Protobuf 数据的哈希表
+    std::vector<SubscriberInfo> subscriberinfos;
+    std::vector<PublisherInfo> publisherinfos;
 };
 
 #endif  // __TOPIC_H__

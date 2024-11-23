@@ -1,13 +1,6 @@
 #include "trie.h"
 
-class TrieNode
-{
-public:
-    TrieNode() {}
-    // bool is_end_of_word;  // 当前节点是否是一个完整路径的结束
-    std::shared_ptr<Topic> topic_ptr;
-    std::unordered_map<std::string, std::shared_ptr<TrieNode>> children;  // 子节点
-};
+
 
 Trie::Trie() : root(std::make_shared<TrieNode>()) {}
 
