@@ -1,6 +1,8 @@
 #ifndef __DOMAINPARTICIPANT_H__
 #define __DOMAINPARTICIPANT_H__
 #include <liburing.h>
+#include <sys/socket.h>
+
 #include <array>
 #include <cstdint>
 #include <map>
@@ -30,8 +32,8 @@ class Node
     {
         struct io_uring_params params;
         memset(&params, 0, sizeof(params));
-        // params.flags |= IORING_SETUP_SQPOLL;
-        // params.sq_thread_idle = 2000;
+        params.flags |= IORING_SETUP_SQPOLL;
+        params.sq_thread_idle = 2000;
         if (io_uring_queue_init_params(QUEUE_DEPTH, &ring, &params) < 0)
         {
             throw std::runtime_error("Failed to initialize io_uring");
@@ -40,10 +42,16 @@ class Node
         {
             throw std::runtime_error("Failed to initialize io_uring");
         }
+        this->init_timer();
         this->tick();
         // 启动运行线程
-        running_       = true;
+        running_ = true;
         worker_thread_.reset(new std::thread(&Node::run, this));
+    }
+    void init_timer(unsigned timeout_ms = DISCOVERTIME)
+    {
+        ts.tv_sec  = timeout_ms / 1000;
+        ts.tv_nsec = (timeout_ms % 1000) * 1000000;
     }
     int init_udp_socket()
     {
@@ -81,89 +89,6 @@ class Node
         return 0;
     }
 
-    int multiacast(const std::vector<uint8_t> &bytes)
-    {
-        // 设置目标地址
-        struct sockaddr_in dest_addr;
-        dest_addr.sin_family = AF_INET;
-        dest_addr.sin_port   = htons(MULTICAST_PORT);
-        if (inet_pton(AF_INET, this->MULTICAST_GROUP, &dest_addr.sin_addr) <= 0)
-        {
-            return -1;
-        }
-        // 获取一个 Submission Queue Entry (SQE)
-        struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
-        if (!sqe)
-        {
-            // close(udp_socket);
-            io_uring_queue_exit(&ring);
-            throw std::runtime_error("Failed to get SQE");
-        }
-        iovec iov;
-        iov.iov_base = (void *)bytes.data();
-        iov.iov_len  = bytes.size();
-
-        msghdr msg      = {};
-        msg.msg_name    = &dest_addr;
-        msg.msg_namelen = sizeof(dest_addr);
-        msg.msg_iov     = &iov;
-        msg.msg_iovlen  = 1;
-        // 准备 sendmsg 操作
-        io_uring_prep_sendmsg(sqe, udp_socket, &msg, 0);
-        IoInfo *info = new IoInfo;
-        info->type   = EventType::Multicast;
-        io_uring_sqe_set_data(sqe, info);
-
-        // 提交请求
-        if (io_uring_submit(&ring) < 0)
-        {
-            // close(udp_socket);
-            io_uring_queue_exit(&ring);
-            throw std::runtime_error("Failed to submit sendmsg request");
-        }
-        return 0;
-    }
-    int unicast(const std::vector<uint8_t> &bytes, std::string_view &ipaddr, int port)
-    {
-        // 设置目标地址
-        struct sockaddr_in dest_addr;
-        dest_addr.sin_family = AF_INET;
-        dest_addr.sin_port   = htons(port);
-        if (inet_pton(AF_INET, ipaddr.data(), &dest_addr.sin_addr) <= 0)
-        {
-            return -1;
-        }
-        // 获取一个 Submission Queue Entry (SQE)
-        struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
-        if (!sqe)
-        {
-            // close(udp_socket);
-            io_uring_queue_exit(&ring);
-            throw std::runtime_error("Failed to get SQE");
-        }
-        iovec iov;
-        iov.iov_base = (void *)bytes.data();
-        iov.iov_len  = bytes.size();
-
-        msghdr msg      = {};
-        msg.msg_name    = &dest_addr;
-        msg.msg_namelen = sizeof(dest_addr);
-        msg.msg_iov     = &iov;
-        msg.msg_iovlen  = 1;
-        // 准备 sendmsg 操作
-        io_uring_prep_sendmsg(sqe, udp_socket, &msg, 0);
-        IoInfo *info = new IoInfo;
-        info->type   = EventType::Read;
-        io_uring_sqe_set_data(sqe, info);
-        // 提交请求
-        if (io_uring_submit(&ring) < 0)
-        {
-            // close(udp_socket);
-            io_uring_queue_exit(&ring);
-            throw std::runtime_error("Failed to submit sendmsg request");
-        }
-        return 0;
-    }
     bool create_publish_topic(const std::string &topic_name, std::shared_ptr<Topic> topic = nullptr)
     {
         auto ret = topic_manager_->create_publishTopic(topic_name, topic);
@@ -183,8 +108,8 @@ class Node
         }
         ret[0] = topic;
         // TODO 发送发布消息，多播还是单播
-        auto data = DDSPacket::create_publish_packet({topic});
-        multiacast(data);
+        publishdata = DDSPacket::create_publish_packet({topic});
+        multiacast(publishdata);
         return true;
     }
     bool subscribe(const std::string &topic_name)
@@ -195,8 +120,8 @@ class Node
             return false;
         }
         //广播订阅消息
-        auto data = DDSPacket::create_subscribe_packet(topics);
-        multiacast(data);
+        subscribedata = DDSPacket::create_subscribe_packet(topics);
+        multiacast(subscribedata);
 
         return true;
     }
@@ -207,8 +132,8 @@ class Node
         {
             return false;
         }
-        auto data = DDSPacket::create_discover_packet(topics);
-        multiacast(data);
+        publishdata = DDSPacket::create_discover_packet(topics);
+        multiacast(publishdata);
         return true;
     }
     int submit_receive_request(int udp_socket)
@@ -249,11 +174,8 @@ class Node
         // io_uring_submit(&ring);
         return 0;
     }
-    void set_timer(unsigned timeout_ms)
+    void set_timer()
     {
-        struct __kernel_timespec ts = {};
-        ts.tv_sec                   = timeout_ms / 1000;
-        ts.tv_nsec                  = (timeout_ms % 1000) * 1000000;
 
         // 获取 SQE 并设置为定时器请求
         struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
@@ -266,93 +188,113 @@ class Node
         info->type   = EventType::Timer;
         io_uring_sqe_set_data(sqe, info);
 
-        // 提交定时器任务
-        if (io_uring_submit(&ring) < 0)
-        {
-            throw std::runtime_error("Failed to submit timeout request");
-        }
+        // // 提交定时器任务
+        // if (io_uring_submit(&ring) < 0)
+        // {
+        //     throw std::runtime_error("Failed to submit timeout request");
+        // }
     }
+    int multiacast(const std::vector<uint8_t> &bytes)
+    {
+        // 设置目标地址
+        IoInfo *info = new IoInfo;
+        info->type   = EventType::Multicast;
+        info->dest_addr.reset(new struct sockaddr_in);
+        info->dest_addr->sin_family = AF_INET;
+        info->dest_addr->sin_port   = htons(MULTICAST_PORT);
+        info->bytes = std::move(bytes);
+
+        iovec *iov                  = new iovec;
+        iov->iov_base               = (void *)info->bytes.data();
+        iov->iov_len                = bytes.size();
+        msghdr *msg                 = new msghdr{};
+        msg->msg_name               = info->dest_addr.get();
+        msg->msg_namelen            = sizeof(*(info->dest_addr));
+        msg->msg_iov                = iov;
+        msg->msg_iovlen             = 1;
+        info->msg_ptr.reset(msg);
+        info->iov_ptr.reset(iov);
+        
+        // 准备发送数据
+        // 设置目标地址
+        if (inet_pton(AF_INET, this->MULTICAST_GROUP, &info->dest_addr->sin_addr) <= 0)
+        {
+            return -1;
+        }
+        // 获取一个 Submission Queue Entry (SQE)
+        struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
+        if (!sqe)
+        {
+            // close(udp_socket);
+            io_uring_queue_exit(&ring);
+            throw std::runtime_error("Failed to get SQE");
+        }
+
+        // 准备 sendmsg 操作
+        io_uring_prep_sendmsg(sqe, this->udp_socket, info->msg_ptr.get(), 0);
+        io_uring_sqe_set_data(sqe, info);
+
+        // // 提交请求
+        // if (io_uring_submit(&ring) < 0)
+        // {
+        //     // close(udp_socket);
+        //     io_uring_queue_exit(&ring);
+        //     throw std::runtime_error("Failed to submit sendmsg request");
+        // }
+        return 0;
+    }
+    // int unicast(const std::vector<uint8_t> &bytes, std::string_view &ipaddr, int port)
+    // {
+    //     // 设置目标地址
+    //     struct sockaddr_in dest_addr;
+    //     dest_addr.sin_family = AF_INET;
+    //     dest_addr.sin_port   = htons(port);
+    //     if (inet_pton(AF_INET, ipaddr.data(), &dest_addr.sin_addr) <= 0)
+    //     {
+    //         return -1;
+    //     }
+    //     // 获取一个 Submission Queue Entry (SQE)
+    //     struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
+    //     if (!sqe)
+    //     {
+    //         // close(udp_socket);
+    //         io_uring_queue_exit(&ring);
+    //         throw std::runtime_error("Failed to get SQE");
+    //     }
+    //     iovec iov;
+    //     iov.iov_base = (void *)bytes.data();
+    //     iov.iov_len  = bytes.size();
+
+    //     msghdr msg      = {};
+    //     msg.msg_name    = &dest_addr;
+    //     msg.msg_namelen = sizeof(dest_addr);
+    //     msg.msg_iov     = &iov;
+    //     msg.msg_iovlen  = 1;
+    //     // 准备 sendmsg 操作
+    //     io_uring_prep_sendmsg(sqe, udp_socket, &msg, 0);
+    //     IoInfo *info = new IoInfo;
+    //     info->type   = EventType::Read;
+    //     io_uring_sqe_set_data(sqe, info);
+    //     // 提交请求
+    //     if (io_uring_submit(&ring) < 0)
+    //     {
+    //         // close(udp_socket);
+    //         io_uring_queue_exit(&ring);
+    //         throw std::runtime_error("Failed to submit sendmsg request");
+    //     }
+    //     return 0;
+    // }
     void tick()
     {
         discovery();
-        set_timer(DISCOVERTIME);
+        set_timer();
     }
     void run()
     {
         while (running_)
         {
             struct io_uring_cqe *cqe;
-            // SPDLOG_INFO("1");
-            // if (io_uring_submit(&ring) < 0)
-            // {
-            //     // close(udp_socket);
-            //     io_uring_queue_exit(&ring);
-            //     throw std::runtime_error("Failed to submit sendmsg request");
-            // }
             int ret = io_uring_submit_and_wait(&ring, 1);
-            // int ret = io_uring_wait_cqe(&ring, &cqe);
-            // // SPDLOG_INFO("2");
-            // if (ret < 0)
-            // {
-            //     std::cerr << "io_uring_wait_cqe failed: " << strerror(-ret) << std::endl;
-            // }else
-            // {
-            //     if (cqe->res < 0)
-            //     {
-            //         // SPDLOG_INFO("case -ETIME:");
-            //         switch (cqe->res)
-            //         {
-            //             case -ETIME:
-            //             {
-            //                 SPDLOG_INFO("case -ETIME:");
-            //                 break;
-            //             }
-            //             default:
-            //             {
-            //                 // std::cerr << "Request failed: " << strerror(-cqe->res) << std::endl;
-            //                 SPDLOG_INFO("Request failed: {}", strerror(-cqe->res));
-            //                 continue;
-            //             }
-            //         }
-            //     }
-            //     // std::cout << "count2:" << count << std::endl;
-            //     // 自定义逻辑，处理 CQE
-            //     switch (((IoInfo *)cqe->user_data)->type)
-            //     {
-            //         case EventType::Multicast:
-            //         {
-            //             // 处理 Multicast 事件
-            //             // std::cout << "Multicast event" << std::endl;
-            //             SPDLOG_INFO("case EventType::Multicast:");
-            //             break;
-            //         }
-            //         case EventType::Unicast:
-            //         {
-            //             // 处理 Unicast 事件
-            //             // std::cout << "Unicast event" << std::endl;
-            //             break;
-            //         }
-            //         case EventType::Read:
-            //         {
-            //             // 处理 Read 事件
-            //             // std::cout << "Read event" << std::endl;
-
-            //             break;
-            //         }
-            //         case EventType::Timer:
-            //         {
-            //             SPDLOG_INFO("case EventType::Timer:");
-            //             tick();
-            //             break;
-            //         }
-            //         default:
-            //         {
-            //             SPDLOG_INFO("default");
-            //         }
-            //     }
-            //     delete (IoInfo *)cqe->user_data;
-            //     io_uring_cqe_seen(&ring, cqe);
-            // }
 
             unsigned head;
             unsigned count = 0;
@@ -370,7 +312,7 @@ class Node
                     {
                         case -ETIME:
                         {
-                            SPDLOG_INFO("case -ETIME:");
+                            // SPDLOG_INFO("case -ETIME:");
                             break;
                         }
                         default:
@@ -438,13 +380,17 @@ class Node
     const int LOCAL_PORT        = 12345;        // 本地端口（固定发送端口）
 
     std::unique_ptr<std::thread> worker_thread_;  // 用于处理 IO 的线程
-    std::atomic<bool> running_;  // 控制线程运行状态
+    std::atomic<bool> running_;                   // 控制线程运行状态
 
     struct sockaddr_in opposite_addr;  // 对方的地址信息
     static constexpr int BUFFER_SIZE = 2048;
     std::array<uint8_t, BUFFER_SIZE> recv_buffer;
 
+    struct __kernel_timespec ts;
     static constexpr int DISCOVERTIME = 1000;
+    std::vector<uint8_t> discoverdata;
+    std::vector<uint8_t> publishdata;
+    std::vector<uint8_t> subscribedata;
 };
 
 #endif  // __DOMAINPARTICIPANT_H__

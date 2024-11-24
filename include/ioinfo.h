@@ -1,7 +1,10 @@
 #ifndef __IOINFO_H__
 #define __IOINFO_H__
 
+#include <memory>
 #include <string>
+#include <vector>
+#include <netinet/in.h>
 // 定义一个枚举类
 enum class EventType
 {
@@ -15,5 +18,9 @@ enum class EventType
 struct IoInfo
 {
     EventType type;
+    std::unique_ptr<struct sockaddr_in> dest_addr;
+    std::unique_ptr<msghdr> msg_ptr;
+    std::unique_ptr<iovec> iov_ptr;
+    std::vector<uint8_t> bytes;
 };
 #endif  // __IOINFO_H__
