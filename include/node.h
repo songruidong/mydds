@@ -15,10 +15,12 @@
 #include "communicationtype.h"
 #include "ioinfo.h"
 #include "packet.h"
+#include "publisherinfo.h"
 #include "spdlog/spdlog.h"
 #include "topic.hpp"
 #include "topicmanager.h"
 #include "trie.h"
+#include "utils.h"
 class Node
 {
   public:
@@ -43,7 +45,8 @@ class Node
             throw std::runtime_error("Failed to initialize io_uring");
         }
         this->init_timer();
-        this->tick();
+        // this->tick();
+        this->submit_receive_request(this->udp_socket);
         // 启动运行线程
         running_ = true;
         worker_thread_.reset(new std::thread(&Node::run, this));
@@ -78,17 +81,32 @@ class Node
         struct sockaddr_in local_addr;
         memset(&local_addr, 0, sizeof(local_addr));
         local_addr.sin_family      = AF_INET;
-        local_addr.sin_port        = htons(LOCAL_PORT);  // 设置本地端口
-        local_addr.sin_addr.s_addr = INADDR_ANY;         // 绑定到所有接口
+        local_addr.sin_port        = htons(MULTICAST_PORT);  // 设置本地端口
+        local_addr.sin_addr.s_addr = INADDR_ANY;             // 绑定到所有接口
 
         if (bind(sock, (struct sockaddr *)&local_addr, sizeof(local_addr)) < 0)
         {
             std::cerr << "Bind failed!" << std::endl;
             return -1;
         }
+        // 加入组播组
+        struct ip_mreq mreq;
+        inet_pton(AF_INET, MULTICAST_GROUP, &mreq.imr_multiaddr.s_addr);
+        mreq.imr_interface.s_addr = INADDR_ANY;  // 使用本机所有接口
+
+        if (setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0)
+        {
+            std::cerr << "Join multicast group failed!" << std::endl;
+            return -1;
+        }
         return 0;
     }
 
+    bool create_topic(const std::string &topic_name, std::shared_ptr<Topic> topic)
+    {
+        auto ret = topic_manager_->create_topic(topic_name, topic);
+        return ret;
+    }
     bool create_publish_topic(const std::string &topic_name, std::shared_ptr<Topic> topic = nullptr)
     {
         auto ret = topic_manager_->create_publishTopic(topic_name, topic);
@@ -99,6 +117,31 @@ class Node
         // auto ret = topic_manager_->create_subscribeTopic(topic_name)
         return true;
     }
+    void handler_read(IoInfo *info)
+    {
+        auto buffer = info->recv_buffer;
+        DDSPacket packet;
+        SPDLOG_INFO("receive packet size:{}", buffer.size());
+        packet.Unpack(buffer.begin(), buffer.end());
+        switch (static_cast<CommunicationType>(packet.header.type))
+        {
+            case CommunicationType::Discover:
+                for (auto &topicname : std::get<DiscoverData>(packet.DDSData).data)
+                {
+                    std::shared_ptr<Topic> topic_ptr = std::make_shared<Topic>(topicname.name);
+                    auto addr                        = Util::sockaddr_to_ip_port(*info->dest_addr);
+                    topic_ptr->publisherinfos.push_back({std::move(addr.first), addr.second});
+                    // topic_ptr->publisherinfos.emplace_back(Util::sockaddr_to_ip_port(*info->dest_addr));
+                    create_topic(topicname.name, topic_ptr);
+                    submit_receive_request(udp_socket);
+                }
+                break;
+            case CommunicationType::Publish:
+                break;
+            case CommunicationType::Subscribe:
+                break;
+        }
+    }
     bool publish(const std::string &topic_name, std::shared_ptr<Topic> topic)
     {
         auto ret = topic_manager_->getTopics(topic_name);
@@ -108,8 +151,8 @@ class Node
         }
         ret[0] = topic;
         // TODO 发送发布消息，多播还是单播
-        publishdata = DDSPacket::create_publish_packet({topic});
-        multiacast(publishdata);
+        auto data = DDSPacket::create_publish_packet({topic});
+        multiacast(data);
         return true;
     }
     bool subscribe(const std::string &topic_name)
@@ -132,48 +175,58 @@ class Node
         {
             return false;
         }
-        publishdata = DDSPacket::create_discover_packet(topics);
-        multiacast(publishdata);
+        auto data = DDSPacket::create_discover_packet(topics);
+        multiacast(data);
         return true;
     }
     int submit_receive_request(int udp_socket)
     {
+        // 设置接收信息的结构体
+        IoInfo *info = new IoInfo;
+        info->type   = EventType::Read;
+        info->dest_addr.reset(new struct sockaddr_in);
+        socklen_t client_addr_len = sizeof(*(info->dest_addr));
+        info->recv_buffer.resize(IoInfo::BUFFER_SIZE);
+        // 创建 iovec 和 msghdr
+        iovec *iov    = new iovec;
+        iov->iov_base = info->recv_buffer.data();  // 设置接收缓冲区
+        iov->iov_len  = IoInfo::BUFFER_SIZE;
+
+        msghdr *msg         = new msghdr{};
+        msg->msg_name       = info->dest_addr.get();  // 设置目标地址
+        msg->msg_namelen    = client_addr_len;        // 地址长度
+        msg->msg_iov        = iov;                    // 数据缓冲区
+        msg->msg_iovlen     = 1;                      // 单个缓冲区
+        msg->msg_control    = nullptr;                // 无额外控制消息
+        msg->msg_controllen = 0;
+        msg->msg_flags      = 0;
+
+        // 将 msg 和 iov 保存到 info 中
+        info->msg_ptr.reset(msg);
+        info->iov_ptr.reset(iov);
+
         // 获取一个 Submission Queue Entry (SQE)
         struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
         if (!sqe)
         {
-            std::cerr << "Failed to get SQE" << std::endl;
-            return -1;
+            io_uring_queue_exit(&ring);
+            throw std::runtime_error("Failed to get SQE");
         }
 
-        // 设置接收缓冲区和目标地址
-        struct iovec iov = {
-            .iov_base = recv_buffer.data(),  // 接收缓冲区,
-            .iov_len  = BUFFER_SIZE,
-        };
-
-        socklen_t client_addr_len = sizeof(this->opposite_addr);
-
-        struct msghdr msg = {
-            .msg_name       = &this->opposite_addr,         // 目标地址
-            .msg_namelen    = sizeof(this->opposite_addr),  // 地址长度
-            .msg_iov        = &iov,                         // 数据缓冲区
-            .msg_iovlen     = 1,                            // 单个缓冲区
-            .msg_control    = nullptr,                      // 无额外控制消息
-            .msg_controllen = 0,
-            .msg_flags      = 0,
-        };
-
         // 准备 recvmsg 操作
-        io_uring_prep_recvmsg(sqe, this->udp_socket, &msg, 0);
-        IoInfo *info = new IoInfo;
-        info->type   = EventType::Read;
+        io_uring_prep_recvmsg(sqe, udp_socket, info->msg_ptr.get(), 0);
         io_uring_sqe_set_data(sqe, info);
 
         // // 提交请求
-        // io_uring_submit(&ring);
+        // if (io_uring_submit(&ring) < 0)
+        // {
+        //     io_uring_queue_exit(&ring);
+        //     throw std::runtime_error("Failed to submit recvmsg request");
+        // }
+
         return 0;
     }
+
     void set_timer()
     {
 
@@ -202,19 +255,19 @@ class Node
         info->dest_addr.reset(new struct sockaddr_in);
         info->dest_addr->sin_family = AF_INET;
         info->dest_addr->sin_port   = htons(MULTICAST_PORT);
-        info->bytes = std::move(bytes);
+        info->bytes                 = std::move(bytes);
 
-        iovec *iov                  = new iovec;
-        iov->iov_base               = (void *)info->bytes.data();
-        iov->iov_len                = bytes.size();
-        msghdr *msg                 = new msghdr{};
-        msg->msg_name               = info->dest_addr.get();
-        msg->msg_namelen            = sizeof(*(info->dest_addr));
-        msg->msg_iov                = iov;
-        msg->msg_iovlen             = 1;
+        iovec *iov       = new iovec;
+        iov->iov_base    = (void *)info->bytes.data();
+        iov->iov_len     = bytes.size();
+        msghdr *msg      = new msghdr{};
+        msg->msg_name    = info->dest_addr.get();
+        msg->msg_namelen = sizeof(*(info->dest_addr));
+        msg->msg_iov     = iov;
+        msg->msg_iovlen  = 1;
         info->msg_ptr.reset(msg);
         info->iov_ptr.reset(iov);
-        
+
         // 准备发送数据
         // 设置目标地址
         if (inet_pton(AF_INET, this->MULTICAST_GROUP, &info->dest_addr->sin_addr) <= 0)
@@ -303,7 +356,7 @@ class Node
             {
                 // 处理 CQE
                 count++;
-                std::cout << "count:" << count << std::endl;
+                SPDLOG_INFO("cq");
                 // 处理完成的请求
                 if (cqe->res < 0)
                 {
@@ -343,8 +396,9 @@ class Node
                     case EventType::Read:
                     {
                         // 处理 Read 事件
+                        SPDLOG_INFO("case EventType::Read:");
+                        handler_read((IoInfo *)cqe->user_data);
                         // std::cout << "Read event" << std::endl;
-
                         break;
                     }
                     case EventType::Timer:
@@ -383,8 +437,6 @@ class Node
     std::atomic<bool> running_;                   // 控制线程运行状态
 
     struct sockaddr_in opposite_addr;  // 对方的地址信息
-    static constexpr int BUFFER_SIZE = 2048;
-    std::array<uint8_t, BUFFER_SIZE> recv_buffer;
 
     struct __kernel_timespec ts;
     static constexpr int DISCOVERTIME = 1000;

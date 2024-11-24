@@ -1,7 +1,9 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
-
+#include <arpa/inet.h>   // inet_ntop, ntohs
+#include <netinet/in.h>  // sockaddr_in
 #include <cstdint>
+#include <iostream>
 #include <stdexcept>
 #include <vector>
 
@@ -71,6 +73,19 @@ class Util
         } while (length > 0);
 
         return encoded_bytes;
+    }
+    // 将 sockaddr_in 转换为字符串 IP 和整数端口
+    static std::pair<std::string, int> sockaddr_to_ip_port(const sockaddr_in &addr)
+    {
+        char ip[INET_ADDRSTRLEN];  // 用于存储 IPv4 地址的字符串
+        if (inet_ntop(AF_INET, &(addr.sin_addr), ip, INET_ADDRSTRLEN) == nullptr)
+        {
+            throw std::runtime_error("Failed to convert IP address to string");
+        }
+
+        int port = ntohs(addr.sin_port);  // 转换端口号到主机字节序
+
+        return {std::string(ip), port};
     }
 };
 

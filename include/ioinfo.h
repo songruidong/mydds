@@ -17,10 +17,12 @@ enum class EventType
 
 struct IoInfo
 {
+    static constexpr int BUFFER_SIZE = 2048;
     EventType type;
     std::unique_ptr<struct sockaddr_in> dest_addr;
     std::unique_ptr<msghdr> msg_ptr;
     std::unique_ptr<iovec> iov_ptr;
     std::vector<uint8_t> bytes;
+    std::vector<uint8_t> recv_buffer;
 };
 #endif  // __IOINFO_H__

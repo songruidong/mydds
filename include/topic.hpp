@@ -68,7 +68,7 @@ class Topic
     const std::string &getName() const { return topic_name; }
     void setName(const std::string &name) { this->topic_name = name; }
 
-  private:
+  public:
     std::string topic_name;  // Topic 名称
     // mutable std::mutex topic_mutex;                // 保护 Topic 数据的互斥锁
     std::unordered_map<int, std::string> storage;  // 存储 Protobuf 数据的哈希表

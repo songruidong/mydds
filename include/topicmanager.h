@@ -57,9 +57,18 @@ class TopicManager
     //     }
     //     return names;
     // }
+    bool create_topic(const std::string &name, std::shared_ptr<Topic> topic = nullptr)
+    {
+        if (publishing_topics.count(name))
+        {
+            return false;
+        }
+        insertTopic(name, topic);
+        return true;
+    }
 
     // 发布 Topic
-    bool create_publishTopic(const std::string &name,std::shared_ptr<Topic> topic = nullptr)
+    bool create_publishTopic(const std::string &name, std::shared_ptr<Topic> topic = nullptr)
     {
         // std::lock_guard<std::mutex> lock(manager_mutex); // 加锁
         if (publishing_topics.count(name))
