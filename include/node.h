@@ -2,7 +2,6 @@
 #define __DOMAINPARTICIPANT_H__
 #include <liburing.h>
 #include <sys/socket.h>
-
 #include <array>
 #include <cstdint>
 #include <map>
@@ -45,7 +44,7 @@ class Node
             throw std::runtime_error("Failed to initialize io_uring");
         }
         this->init_timer();
-        // this->tick();
+        this->tick();
         this->submit_receive_request(this->udp_socket);
         // 启动运行线程
         running_ = true;
@@ -112,20 +111,16 @@ class Node
         auto ret = topic_manager_->create_publishTopic(topic_name, topic);
         return ret;
     }
-    bool create_subscribe_topic(const std::string &topic_name, std::shared_ptr<Topic> topic)
-    {
-        // auto ret = topic_manager_->create_subscribeTopic(topic_name)
-        return true;
-    }
     void handler_read(IoInfo *info)
     {
         auto buffer = info->recv_buffer;
         DDSPacket packet;
-        SPDLOG_INFO("receive packet size:{}", buffer.size());
+        SPDLOG_DEBUG("receive packet size:{}", buffer.size());
         packet.Unpack(buffer.begin(), buffer.end());
         switch (static_cast<CommunicationType>(packet.header.type))
         {
             case CommunicationType::Discover:
+            {
                 for (auto &topicname : std::get<DiscoverData>(packet.DDSData).data)
                 {
                     std::shared_ptr<Topic> topic_ptr = std::make_shared<Topic>(topicname.name);
@@ -133,14 +128,45 @@ class Node
                     topic_ptr->publisherinfos.push_back({std::move(addr.first), addr.second});
                     // topic_ptr->publisherinfos.emplace_back(Util::sockaddr_to_ip_port(*info->dest_addr));
                     create_topic(topicname.name, topic_ptr);
-                    submit_receive_request(udp_socket);
                 }
                 break;
+            }
+
             case CommunicationType::Publish:
+            {  //  处理发布消息
+                for (auto &topicpacket : std::get<PublishData>(packet.DDSData).data)
+                {
+                    auto topics = topic_manager_->getTopics(topicpacket.name.name);
+                    if (topics.size() == 0)
+                    {
+                        continue;
+                    }
+                    for (auto &topic : topics)
+                    {
+                        topic->setData(0, topicpacket.data.data);
+                    }
+                }
                 break;
+            }
             case CommunicationType::Subscribe:
+            {
+                for (auto &topicpacket : std::get<SubscribeData>(packet.DDSData).data)
+                {
+                    auto topics = topic_manager_->getTopics(topicpacket.name);
+                    if (topics.size() == 0)
+                    {
+                        continue;
+                    }
+                    for (auto &topic : topics)
+                    {
+                        auto addr = Util::sockaddr_to_ip_port(*info->dest_addr);
+                        topic->subscriberinfos.push_back({std::move(addr.first), addr.second});
+                    }
+                }
                 break;
+            }
         }
+        submit_receive_request(udp_socket);
     }
     bool publish(const std::string &topic_name, std::shared_ptr<Topic> topic)
     {
@@ -356,22 +382,22 @@ class Node
             {
                 // 处理 CQE
                 count++;
-                SPDLOG_INFO("cq");
+                SPDLOG_DEBUG("cq");
                 // 处理完成的请求
                 if (cqe->res < 0)
                 {
-                    // SPDLOG_INFO("case -ETIME:");
+                    // SPDLOG_DEBUG("case -ETIME:");
                     switch (cqe->res)
                     {
                         case -ETIME:
                         {
-                            // SPDLOG_INFO("case -ETIME:");
+                            // SPDLOG_DEBUG("case -ETIME:");
                             break;
                         }
                         default:
                         {
                             // std::cerr << "Request failed: " << strerror(-cqe->res) << std::endl;
-                            SPDLOG_INFO("Request failed: {}", strerror(-cqe->res));
+                            SPDLOG_DEBUG("Request failed: {}", strerror(-cqe->res));
                             continue;
                         }
                     }
@@ -384,7 +410,7 @@ class Node
                     {
                         // 处理 Multicast 事件
                         // std::cout << "Multicast event" << std::endl;
-                        SPDLOG_INFO("case EventType::Multicast:");
+                        SPDLOG_DEBUG("case EventType::Multicast:");
                         break;
                     }
                     case EventType::Unicast:
@@ -396,27 +422,27 @@ class Node
                     case EventType::Read:
                     {
                         // 处理 Read 事件
-                        SPDLOG_INFO("case EventType::Read:");
+                        SPDLOG_DEBUG("case EventType::Read:");
                         handler_read((IoInfo *)cqe->user_data);
                         // std::cout << "Read event" << std::endl;
                         break;
                     }
                     case EventType::Timer:
                     {
-                        SPDLOG_INFO("case EventType::Timer:");
+                        SPDLOG_DEBUG("case EventType::Timer:");
                         tick();
                         break;
                     }
                     default:
                     {
-                        SPDLOG_INFO("default");
+                        SPDLOG_DEBUG("default");
                     }
                 }
                 delete (IoInfo *)cqe->user_data;
                 // std::cout << "Request completed successfully, res=" << cqe->res << std::endl;
             }
             io_uring_cq_advance(&ring, count);
-            SPDLOG_INFO("{}", count);
+            SPDLOG_DEBUG("{}", count);
         }
     }
 

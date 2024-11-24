@@ -25,6 +25,10 @@ class Topic
         storage[key] = data.SerializeAsString();
     }
 
+    void setData(int key, const std::string &data)
+    {
+        storage[key] = data;
+    }
 
 
     // 获取 Protobuf 数据，按 key 检索

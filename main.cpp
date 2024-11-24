@@ -11,7 +11,7 @@ int main()
     spdlog::set_level(spdlog::level::debug);  // 设置最低日志级别为 debug
     spdlog::set_pattern("[%H:%M:%S %z] [%n] [%^---%l---%$] [thread %t] [source %s] [function %!] [line %#] %v");
     spdlog::stdout_logger_mt("console");
-    // SPDLOG_INFO("sdfasdf{}",1);
+    // SPDLOG_DEBUG("sdfasdf{}",1);
 
     Node node;
     node.init();

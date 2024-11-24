@@ -8,6 +8,7 @@
 #include <variant>
 #include <vector>
 #include "communicationtype.h"
+#include "spdlog/spdlog.h"
 #include "topic.hpp"
 #include "utils.h"
 // 基础打包解包接口
@@ -264,7 +265,10 @@ class DDSPacket : public Packet
                 break;
             }
             default:
+            {
+                // SPDLOG_ACTIVE_LEVEL
                 throw std::invalid_argument("Unknown packet type");
+            }
         }
 
         return ret;
@@ -299,7 +303,12 @@ class DDSPacket : public Packet
                 break;
             }
             default:
-                throw std::invalid_argument("Unknown packet type");
+            {
+                std::string s(begin,begin+10);
+                SPDLOG_DEBUG("{}",s);
+                SPDLOG_ERROR("Unknown packet type");
+                // throw std::invalid_argument("Unknown packet type");
+            }
         }
 
         return std::distance(begin, end);
@@ -337,7 +346,8 @@ class DDSPacket : public Packet
         packet.DDSData = subscribe_data;
         return packet.Pack();
     }
-    static std::vector<std::uint8_t> create_discover_packet(const std::vector<std::shared_ptr<Topic>> &topics) {
+    static std::vector<std::uint8_t> create_discover_packet(const std::vector<std::shared_ptr<Topic>> &topics)
+    {
         DDSPacket packet;
         packet.header.type = static_cast<uint8_t>(CommunicationType::Discover);
         DiscoverData discover_data;
